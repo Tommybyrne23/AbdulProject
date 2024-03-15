@@ -1,0 +1,171 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+
+public class ClientApplication extends JFrame {
+    private static final String SERVER_IP = "localhost";
+    private static final int SERVER_PORT = 12345;
+
+    private JTextField classNameField;
+
+    private JTextField moduleNameField;
+    private JTextField dateTimeField;
+    private JTextField roomNumberField;
+    private JTextArea responseArea;
+
+    private Socket socket;
+    private BufferedReader reader;
+    private PrintWriter writer;
+
+    public ClientApplication() {
+        setTitle("Class Scheduler Client");
+        setSize(400, 300);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+
+        JPanel inputPanel = new JPanel(new GridLayout(9, 2));
+        inputPanel.add(new JLabel("Class Name:"));
+        classNameField = new JTextField();
+        inputPanel.add(classNameField);
+        inputPanel.add(new JLabel("Module Code:"));
+        moduleNameField = new JTextField();
+        inputPanel.add(moduleNameField);
+        inputPanel.add(new JLabel("Date and Time:"));
+        dateTimeField = new JTextField();
+        inputPanel.add(dateTimeField);
+        inputPanel.add(new JLabel("Room Number:"));
+        roomNumberField = new JTextField();
+        inputPanel.add(roomNumberField);
+
+        JButton addClassButton = new JButton("Add Class");
+        addClassButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                sendMessage("ADD CLASS");
+            }
+        });
+        inputPanel.add(addClassButton);
+
+        JButton addModuleButton = new JButton("Add Module");
+        addModuleButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                sendMessage("ADD MODULE");
+            }
+        });
+        inputPanel.add(addModuleButton);
+
+        JButton removeClassButton = new JButton("Remove Class");
+        removeClassButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                sendMessage("REMOVE CLASS");
+            }
+        });
+        inputPanel.add(removeClassButton);
+
+        JButton removeModuleButton = new JButton("Remove Module");
+        removeModuleButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                sendMessage("REMOVE MODULE");
+            }
+        });
+        inputPanel.add(removeModuleButton);
+
+        JButton displayButton = new JButton("Display Schedule");
+        displayButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                sendMessage("DISPLAY");
+            }
+        });
+        inputPanel.add(displayButton);
+
+        JButton stopButton = new JButton("Stop");
+        stopButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                sendMessage("STOP");
+            }
+        });
+        inputPanel.add(new JPanel()); // Placeholder for empty cell
+        inputPanel.add(stopButton);
+
+        responseArea = new JTextArea();
+        responseArea.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(responseArea);
+
+        getContentPane().setLayout(new BorderLayout());
+        getContentPane().add(inputPanel, BorderLayout.NORTH);
+        getContentPane().add(scrollPane, BorderLayout.CENTER);
+
+        setVisible(true);
+
+        connectToServer();
+    }
+
+    private void connectToServer() {
+        try {
+            socket = new Socket(SERVER_IP, SERVER_PORT);
+            reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            writer = new PrintWriter(socket.getOutputStream(), true);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void sendMessage(String action) {
+        String className = classNameField.getText();
+        String moduleCode = moduleNameField.getText();
+        String dateTime = dateTimeField.getText();
+        String roomNumber = roomNumberField.getText();
+
+        if(action.contains("ADD CLASS") || action.contains("REMOVE CLASS")) {
+            writer.println(action + ":" + className + ":" + moduleCode + ":" + dateTime + ":" + roomNumber);
+            try {
+                String response = reader.readLine();
+                responseArea.append(response + "\n");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else if (action.contains("STOP")) {
+            className = "empty";
+            moduleCode = "empty";
+            dateTime = "empty";
+            roomNumber = "empty";
+            writer.println(action + ":" + className + ":" + moduleCode + ":" + dateTime + ":" + roomNumber);
+            try {
+                String response = reader.readLine();
+                responseArea.append(response + "\n");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        else if (!className.isEmpty() && !moduleCode.isEmpty() && !dateTime.isEmpty() && !roomNumber.isEmpty()) {
+            writer.println(action + ":" + className + ":" + moduleCode + ":" + dateTime + ":" + roomNumber);
+            try {
+                String response = reader.readLine();
+                responseArea.append(response + "\n");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            responseArea.append("Error: To add a module, please fill in all options.\n");
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                new ClientApplication();
+            }
+        });
+    }
+}
