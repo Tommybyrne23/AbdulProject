@@ -1,18 +1,4 @@
- import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
-/**
- * ServerApp class represents the server application that handles client requests.
- * It stores class schedules received from clients and performs actions like adding,
- * removing, and displaying schedules.
- */
-public class ServerApp {
+{
     // Port number for server communication
     private static final int PORT = 12345;
     // Data structure to store class schedules
@@ -20,6 +6,7 @@ public class ServerApp {
 
     private static HashMap<String, ArrayList<String>> moduleSchedule = new HashMap<>();
 
+    private static ArrayList<String> module_Schedule = new ArrayList<>();
     /**
      * Main method to start the server application.
      * It listens for client connections and handles them in separate threads.
@@ -73,7 +60,7 @@ public class ServerApp {
                         // Process client request
                         String[] parts = clientMessage.split(":");
                         if (parts.length != 5) {
-                            throw new IncorrectActionException("Incorrect action format");
+                            throw new IncorrectActionException("Incorrect action format1");
                         }
                         String action = parts[0];
                         String className = parts[1];
@@ -84,7 +71,7 @@ public class ServerApp {
                         switch (action) {
                             case "ADD CLASS":
                                 if(className == null || moduleCode == null){
-                                    throw new IncorrectActionException("Incorrect action format");
+                                    throw new IncorrectActionException("Incorrect action format2");
                                 }
                                 addClass(className, moduleCode, writer);
                                 break;
@@ -93,7 +80,7 @@ public class ServerApp {
                                 break;
                             case "REMOVE CLASS":
                                 if(className == "" || moduleCode == "") {
-                                    throw new IncorrectActionException("Incorrect action format");
+                                    throw new IncorrectActionException("Incorrect action format3");
                                 }
                                 removeClass(className, writer);
                                 break;
@@ -101,7 +88,7 @@ public class ServerApp {
                                 removeModule(moduleCode, writer);
                                 break;
                             case "DISPLAY":
-                                displaySchedule(className);
+                                displaySchedule(moduleCode);
                                 break;
                             case "STOP":
                                 writer.println("TERMINATE");
@@ -147,8 +134,7 @@ public class ServerApp {
                 if (moduleSchedule.containsKey(moduleCode)) {
                     writer.println("Error: Module already scheduled.");
                 } else {
-                    ArrayList<String> module_Schedule = new ArrayList<>();
-                    module_Schedule.add("Time: " + dateTime + " - Room: " + roomNumber);
+                    module_Schedule.add("Module: " + moduleCode + " - Time: " + dateTime + " - Room: " + roomNumber);
                     moduleSchedule.put(moduleCode, module_Schedule);
                     writer.println("Success: Module " + moduleCode + " has been scheduled for " + dateTime + " in room " + roomNumber);
                 }
@@ -178,19 +164,19 @@ public class ServerApp {
 
 
         /**
-             * Method to remove a class from the schedule.
-             * It removes the class record from the data structure and notifies the client.
-             * @param className The name of the class to be removed.
-             * @param writer PrintWriter to send responses to the client.
-             */
-            private void removeClass (String className, PrintWriter writer){
-                if (classSchedule.containsKey(className)) {
-                    classSchedule.remove(className);
-                    writer.println("Success: " + className + " has been removed from the system.");
-                } else {
-                    writer.println("Error: " + className + " not found.");
-                }
+         * Method to remove a class from the schedule.
+         * It removes the class record from the data structure and notifies the client.
+         * @param className The name of the class to be removed.
+         * @param writer PrintWriter to send responses to the client.
+         */
+        private void removeClass (String className, PrintWriter writer){
+            if (classSchedule.containsKey(className)) {
+                classSchedule.remove(className);
+                writer.println("Success: " + className + " has been removed from the system.");
+            } else {
+                writer.println("Error: " + className + " not found.");
             }
+        }
 
 
         private void removeModule(String moduleCode, PrintWriter writer) {
@@ -204,17 +190,17 @@ public class ServerApp {
         }
 
 
-        private void displaySchedule(String className) {
-            if (moduleSchedule.containsKey(className)) {
-                List<String> classModules = moduleSchedule.get(className);
-                System.out.println("Modules for class " + className + ":");
+        private void displaySchedule(String moduleCode) {
+            if (moduleSchedule.containsKey(moduleCode)) {
+                List<String> classModules = moduleSchedule.get(moduleCode);
                 for (String module : classModules) {
                     System.out.println(module);
                 }
             } else {
-                System.out.println("Error: Class not found.");
+                System.out.println("Error: Module not found.");
             }
         }
+
 
 
         private void closeConnection(BufferedReader reader, PrintWriter writer, Socket socket) {
