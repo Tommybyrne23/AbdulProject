@@ -127,6 +127,8 @@ public class ClientApplication extends JFrame {
         String roomNumber = roomNumberField.getText();
 
         if(action.contains("ADD CLASS") || action.contains("REMOVE CLASS")) {
+            dateTime = "empty";
+            roomNumber = "empty";
             writer.println(action + ":" + className + ":" + moduleCode + ":" + dateTime + ":" + roomNumber);
             try {
                 String response = reader.readLine();
